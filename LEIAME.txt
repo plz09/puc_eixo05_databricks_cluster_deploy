@@ -1,0 +1,30 @@
+# Instruções do Projeto Eixo 05
+
+# Criar a imagem Docker
+
+docker build -t puc-terraform-image:p5 .
+
+# Criar o container Docker
+
+docker run -dit --name puc-p5 -v ./IaC:/iac puc-terraform-image:p5 /bin/bash
+
+NOTA: No Windows você deve substituir ./IaC pelo caminho completo da pasta, por exemplo: C:\puc\Cap17\IaC
+
+
+# Verifique a versão do Terraform
+
+terraform version
+
+
+# Execute as instruções abaixo dentro do container Docker!!!
+
+
+# Instalação do Databricks CLI
+
+curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+
+# Configurar a autenticação:
+
+databricks configure --token
+
