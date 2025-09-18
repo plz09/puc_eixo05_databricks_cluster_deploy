@@ -8,9 +8,6 @@ docker build -t puc-terraform-image:p5 .
 
 docker run -dit --name puc-p5 -v ./IaC:/iac puc-terraform-image:p5 /bin/bash
 
-NOTA: No Windows você deve substituir ./IaC pelo caminho completo da pasta, por exemplo: C:\puc\Cap17\IaC
-
-
 # Verifique a versão do Terraform
 
 terraform version

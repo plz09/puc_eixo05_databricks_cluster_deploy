@@ -20,6 +20,10 @@ resource "databricks_job" "puc_job" {
     
     notebook_task {
       notebook_path = databricks_notebook.puc_notebook.path
+      base_parameters = {
+        dataset_name = "stanfordnlp/imdb"
+        s3_path      = "s3a://${var.aws_s3_bucket}/bronze/imdb"
+      }
     }
   }
   

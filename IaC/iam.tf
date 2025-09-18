@@ -28,12 +28,24 @@ resource "aws_iam_role_policy" "databricks_cluster_s3_access" {
     Statement = [
       {
         Effect   = "Allow",
-        Action   = ["s3:ListBucket"],
+        Action   = [
+          "s3:ListBucket",
+          "s3:GetBucketLocation",
+          "s3:ListBucketMultipartUploads"
+        ],
         Resource = aws_s3_bucket.lake.arn
       },
       {
         Effect   = "Allow",
-        Action   = ["s3:GetObject","s3:PutObject","s3:DeleteObject"],
+        Action   = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:AbortMultipartUpload",
+          "s3:ListMultipartUploadParts",
+          "s3:CreateMultipartUpload",
+          "s3:CompleteMultipartUpload"
+        ],
         Resource = "${aws_s3_bucket.lake.arn}/*"
       }
     ]
