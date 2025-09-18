@@ -35,12 +35,11 @@ resource "databricks_cluster" "puc_cluster" {
   num_workers             = var.cluster_num_workers
 
   aws_attributes {
-    instance_profile_arn = databricks_instance_profile.cluster_profile.id
+    instance_profile_arn = aws_iam_instance_profile.databricks_cluster.arn
   }
 }
 
 output "cluster_url" {
  value = databricks_cluster.puc_cluster.url
 }
-
 
