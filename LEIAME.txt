@@ -12,15 +12,6 @@ docker run -dit --name puc-p5 -v ./IaC:/iac puc-terraform-image:p5 /bin/bash
 
 terraform version
 
-
-# Execute as instruções abaixo dentro do container Docker!!!
-
-
-# Instalação do Databricks CLI
-
-curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
-
-
 # Configurar a autenticação:
 
 databricks configure --token
