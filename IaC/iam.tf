@@ -59,4 +59,31 @@ resource "aws_iam_instance_profile" "databricks_cluster" {
 
 resource "databricks_instance_profile" "cluster_profile" {
   instance_profile_arn = aws_iam_instance_profile.databricks_cluster.arn
+  skip_validation      = true
+}
+
+## Opcional: conceder iam:PassRole para a role do workspace Databricks
+variable "databricks_cross_account_role_name" {
+  type        = string
+  description = "Nome da role que o workspace Databricks utiliza (para conceder iam:PassRole ao instance profile). Deixe vazio para não anexar."
+  default     = ""
+}
+
+resource "aws_iam_role_policy" "allow_passrole_to_instance_profile" {
+  count = var.databricks_cross_account_role_name != "" ? 1 : 0
+  name  = "allow-passrole-to-databricks-instance-profile"
+  role  = var.databricks_cross_account_role_name
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = ["iam:PassRole"],
+        Resource = aws_iam_role.databricks_cluster_role.arn,
+        Condition = {
+          StringEquals = { "iam:PassedToService": "ec2.amazonaws.com" }
+        }
+      }
+    ]
+  })
 }
