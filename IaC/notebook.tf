@@ -1,5 +1,3 @@
-# Projeto 5 - Databricks Cluster Deploy com Terraform Para Processamento Distribuído
-
 # Obtém detalhes sobre o usuário
 data "databricks_current_user" "me" {}
 

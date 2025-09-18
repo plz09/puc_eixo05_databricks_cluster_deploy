@@ -1,5 +1,3 @@
-# Projeto Eixo 05 - Databricks Cluster Deploy com Terraform Para Processamento Distribuído
-
 variable "job_name" {
   description = "Nome do job."
   type        = string

@@ -1,5 +1,3 @@
-# Projeto Eixo 05 - Databricks Cluster Deploy com Terraform Para Processamento Distribuído
-
 variable "cluster_name" {
   description = "Nome do cluster."
   type        = string
@@ -35,8 +33,14 @@ resource "databricks_cluster" "puc_cluster" {
   spark_version           = data.databricks_spark_version.latest_lts.id
   autotermination_minutes = var.cluster_autotermination_minutes
   num_workers             = var.cluster_num_workers
+
+  aws_attributes {
+    instance_profile_arn = databricks_instance_profile.cluster_profile.id
+  }
 }
 
 output "cluster_url" {
  value = databricks_cluster.puc_cluster.url
 }
+
+

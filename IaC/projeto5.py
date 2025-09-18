@@ -1,41 +1,61 @@
-# Projeto 5 - Databricks Cluster Deploy com Terraform Para Processamento Distribuído
+# Databricks notebook source
+# Instala dependências (no cluster)
+%pip install -q datasets==2.20.0
 
-# Importa as funções col e current_timestamp do módulo pyspark.sql.functions
-from pyspark.sql.functions import col, current_timestamp
+# COMMAND ----------
+import os
+from datasets import load_dataset
 
-# Define o caminho do dataset
-file_path = "/databricks-datasets/structured-streaming/events"
+# Widgets para parâmetros (funciona em Job e execução manual)
+dbutils.widgets.text("dataset_name", "stanfordnlp/imdb", "HuggingFace dataset")
+dbutils.widgets.text("s3_path", "", "S3 base path (ex: s3a://<bucket>/bronze/imdb)")
+dbutils.widgets.text("write_format", "parquet", "write format (parquet/csv)")
+dbutils.widgets.text("repartition", "8", "num partitions")
 
-# Obtém o nome de usuário atual e o formata para ser usado como parte do nome da tabela
-username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
+dataset_name = dbutils.widgets.get("dataset_name").strip() or "stanfordnlp/imdb"
+s3_path = dbutils.widgets.get("s3_path").strip()
+write_format = (dbutils.widgets.get("write_format") or "parquet").lower()
+repartition = int(dbutils.widgets.get("repartition") or "8")
 
-# Define o nome da tabela utilizando o nome de usuário
-table_name = f"{username}_dsa_projeto5"
+# Fallback para variáveis de ambiente quando não houver widget definido
+if not s3_path:
+    bucket = os.environ.get("S3_BUCKET")
+    prefix = os.environ.get("S3_PREFIX", "bronze/imdb")
+    if not bucket:
+        raise ValueError(
+            "Defina 's3_path' via widget (s3a://<bucket>/bronze/imdb) "
+            "ou exporte S3_BUCKET (+ opcional S3_PREFIX)."
+        )
+    s3_path = f"s3a://{bucket}/{prefix}"
 
-# Define o caminho do checkpoint para controle de progresso
-checkpoint_path = f"/tmp/{username}/_checkpoint/dsa_projeto5"
+print(f"Dataset: {dataset_name}")
+print(f"Destino S3: {s3_path} (formato: {write_format})")
 
-# Remove a tabela existente, se existir
-spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+# COMMAND ----------
+# Carrega dataset do Hugging Face (precisa de internet no cluster)
+ds = load_dataset(dataset_name)
 
-# Remove o diretório de checkpoint existente, se existir
-dbutils.fs.rm(checkpoint_path, True)
+# Grava cada split em uma pasta separada no S3
+for split_name, split_ds in ds.items():
+    n = len(split_ds)
+    print(f"Split '{split_name}': {n} registros")
 
-# Lê o stream de dados do arquivo, adiciona colunas para o caminho do arquivo fonte e o tempo de processamento,
-# e grava os dados em uma tabela no formato de stream
-(spark.readStream
-  .format("cloudFiles")
-  .option("cloudFiles.format", "json")
-  .option("cloudFiles.schemaLocation", checkpoint_path)
-  .load(file_path)
-  .select("*", col("_metadata.file_path").alias("source_file"), current_timestamp().alias("processing_time"))
-  .writeStream
-  .option("checkpointLocation", checkpoint_path)
-  .trigger(availableNow=True)
-  .toTable(table_name))
+    # Converte para Pandas e então para Spark DataFrame
+    pdf = split_ds.to_pandas()
+    sdf = spark.createDataFrame(pdf).repartition(repartition)
 
-# Lê os dados da tabela criada
-df = spark.read.table(table_name)
-
-# Exibe os dados lidos
-display(df)
+    out_path = f"{s3_path.rstrip('/')}/{split_name}"
+    if write_format == "csv":
+        (
+            sdf.write
+            .mode("overwrite")
+            .option("header", "true")
+            .csv(out_path)
+        )
+    else:
+        (
+            sdf.write
+            .mode("overwrite")
+            .parquet(out_path)
+        )
+    print(f"Gravou em: {out_path}")
