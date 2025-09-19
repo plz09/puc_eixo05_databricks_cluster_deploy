@@ -12,11 +12,16 @@ dataset_name = dbutils.widgets.get("dataset_name").strip() or "stanfordnlp/imdb"
 s3_path = dbutils.widgets.get("s3_path").strip()
 
 if not s3_path:
-    bucket = os.environ.get("S3_BUCKET")
-    prefix = os.environ.get("S3_PREFIX", "bronze/imdb")
-    if not bucket:
-        raise ValueError("Defina 's3_path' via widget ou exporte S3_BUCKET (+ opcional S3_PREFIX).")
-    s3_path = f"s3a://{bucket}/{prefix}"
+    raise ValueError("Defina 's3_path' via widget.")
+
+# Credenciais AWS via Databricks Secrets (escopo: aws)
+aws_access_key_id = dbutils.secrets.get("aws", "aws_access_key_id")
+aws_secret_access_key = dbutils.secrets.get("aws", "aws_secret_access_key")
+
+# Configura S3A para usar as chaves diretamente
+spark.conf.set("fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider")
+spark.conf.set("fs.s3a.access.key", aws_access_key_id)
+spark.conf.set("fs.s3a.secret.key", aws_secret_access_key)
 
 # Carrega o dataset do Hugging Face
 ds = load_dataset(dataset_name)
