@@ -16,5 +16,6 @@ provider "aws" {
 }
 
 provider "databricks" {
-  profile = "DEFAULT"
+  profile = "DEFAULT"  # já existe para workspace-level
 }
+
