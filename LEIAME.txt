@@ -8,9 +8,6 @@ docker build -t puc-terraform-image:p5 .
 
 docker run -dit --name puc-p5 -v ./IaC:/iac puc-terraform-image:p5 /bin/bash
 
-# Verifique a versão do Terraform
-
-terraform version
 
 # Configurar a autenticação:
 
@@ -33,3 +30,6 @@ databricks secrets put --scope aws --key aws_secret_access_key --string-value "$
 # Verifique:
 databricks secrets list-scopes
 databricks secrets list --scope aws
+
+
+# Apos realizar o terraform destroy, lembrar de excluir o workspace da Databricks manualmente.
