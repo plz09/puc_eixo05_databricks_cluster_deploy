@@ -34,12 +34,8 @@ resource "databricks_cluster" "puc_cluster" {
   autotermination_minutes = var.cluster_autotermination_minutes
   num_workers             = var.cluster_num_workers
 
-  aws_attributes {
-    instance_profile_arn = aws_iam_instance_profile.databricks_cluster.arn
-  }
 }
 
 output "cluster_url" {
  value = databricks_cluster.puc_cluster.url
 }
-
